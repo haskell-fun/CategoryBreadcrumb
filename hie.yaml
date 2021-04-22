@@ -1,0 +1,14 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "category-breadcrumb:lib"
+
+    - path: "./app/Main.hs"
+      component: "category-breadcrumb:exe:category-breadcrumb-exe"
+
+    - path: "./app/Paths_haskell_toy_example.hs"
+      component: "category-breadcrumb:exe:category-breadcrumb-exe"
+
+    - path: "./test"
+      component: "category-breadcrumb:test:category-breadcrumb-test"
+

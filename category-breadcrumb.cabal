@@ -1,0 +1,59 @@
+cabal-version: 3.0
+
+-- This file has been generated from package.yaml by hpack version 0.34.3.
+--
+-- see: https://github.com/sol/hpack
+
+name:           category-breadcrumb
+version:        0.1.0.0
+build-type:     Simple
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_category_breadcrumb
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings
+  ghc-options: -Wall -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , text
+  default-language: Haskell2010
+
+executable category-breadcrumb-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_category_breadcrumb
+  hs-source-dirs:
+      app
+  default-extensions: OverloadedStrings
+  ghc-options: -Wall -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , category-breadcrumb
+    , containers
+    , text
+  default-language: Haskell2010
+
+test-suite category-breadcrumb-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      LibSpec
+      Paths_category_breadcrumb
+  hs-source-dirs:
+      test
+  default-extensions: OverloadedStrings
+  ghc-options: -Wall -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck
+    , base >=4.7 && <5
+    , category-breadcrumb
+    , containers
+    , hspec
+    , hspec-discover
+    , text
+  default-language: Haskell2010
