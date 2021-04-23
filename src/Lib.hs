@@ -1,23 +1,24 @@
-{-# LANGUAGE DeriveGeneric #-}
 module Lib where
 
-import Data.List.NonEmpty ( NonEmpty )
-import GHC.Generics ( Generic )
+import Data.List.NonEmpty (NonEmpty)
 
+newtype CategoryId = CategoryId Int deriving (Eq, Show)
 
-newtype CategoryId = CategoryId Int deriving (Eq, Show, Generic)
+data Category = Category
+  { categoryId :: CategoryId,
+    active :: Bool,
+    selectable :: Bool,
+    language :: String,
+    left :: Int,
+    right :: Int,
+    text :: String
+  }
+  deriving (Eq, Show)
 
-data Category = Category {
-  categoryId :: CategoryId,
-  active :: Bool,
-  selectable :: Bool,
-  language :: String,
-  left :: Int,
-  right :: Int,
-  text :: String
-} deriving (Eq, Show, Generic)
 type CategoryTree = [Category]
 
+--data Error = CategoryNotFound | TreeDescriptionCorrupted deriving (Eq, Show)
+--breadcrumb :: CategoryTree -> CategoryId -> Either Error (NonEmpty CategoryId)
 breadcrumb :: CategoryTree -> CategoryId -> Maybe (NonEmpty CategoryId)
 breadcrumb _ _ = Nothing
 
