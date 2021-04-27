@@ -21,7 +21,7 @@ stack.yaml.lock
 *.aux
 *.hp
 *.eventlog
-category-breadcrumbb.cabal
+category-breadcrumb.cabal
 hls.log
 cabal.project.local
 cabal.project.local~

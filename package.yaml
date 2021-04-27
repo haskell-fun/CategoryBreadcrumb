@@ -10,9 +10,6 @@ dependencies:
 - http-client
 - aeson
 - generic-aeson
-- wai
-- wai-extra
-- warp
 
 default-extensions:
 - OverloadedStrings
