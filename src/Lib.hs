@@ -34,7 +34,7 @@ instance FromJSON Category
 
 type CategoryTree = [Category]
 
-type CategoryAPI = "categories" :> "" :> Get '[JSON] CategoryTree
+type CategoryAPI = "api" :> "v1" :> "categories" :> "" :> Get '[JSON] CategoryTree
 
 categoryAPI :: Proxy CategoryAPI
 categoryAPI = Proxy
