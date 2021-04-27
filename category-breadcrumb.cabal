@@ -18,9 +18,17 @@ library
   default-extensions: OverloadedStrings
   ghc-options: -Wall -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , containers
+    , generic-aeson
+    , http-client
+    , servant
+    , servant-client
     , text
+    , wai
+    , wai-extra
+    , warp
   default-language: Haskell2010
 
 executable category-breadcrumb-exe
@@ -32,10 +40,18 @@ executable category-breadcrumb-exe
   default-extensions: OverloadedStrings
   ghc-options: -Wall -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , category-breadcrumb
     , containers
+    , generic-aeson
+    , http-client
+    , servant
+    , servant-client
     , text
+    , wai
+    , wai-extra
+    , warp
   default-language: Haskell2010
 
 test-suite category-breadcrumb-test
@@ -50,10 +66,20 @@ test-suite category-breadcrumb-test
   ghc-options: -Wall -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
+    , aeson
     , base >=4.7 && <5
     , category-breadcrumb
     , containers
+    , generic-aeson
     , hspec
     , hspec-discover
+    , hspec-wai
+    , hspec-wai-json
+    , http-client
+    , servant
+    , servant-client
     , text
+    , wai
+    , wai-extra
+    , warp
   default-language: Haskell2010
