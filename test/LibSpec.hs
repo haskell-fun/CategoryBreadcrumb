@@ -4,12 +4,21 @@ import Data.Maybe (isNothing)
 import Lib
 import Test.Hspec (Spec, describe)
 import Test.Hspec.QuickCheck (prop)
-import Test.QuickCheck (Gen, listOf)
+import Test.QuickCheck (Gen, elements, listOf)
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import Test.QuickCheck.Property (forAll)
 
 genCategoryId :: Gen CategoryId
 genCategoryId = CategoryId <$> arbitrary
+
+instance Arbitrary CategoryState where
+  arbitrary = elements [Active, Inactive]
+
+instance Arbitrary CategorySelectableState where
+  arbitrary = elements [Selectable, Unselectable]
+
+instance Arbitrary CategoryDescription where
+  arbitrary = CategoryDescription <$> arbitrary
 
 instance Arbitrary CategoryId where
   arbitrary = genCategoryId
