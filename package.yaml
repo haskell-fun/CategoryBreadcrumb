@@ -8,6 +8,7 @@ dependencies:
 - servant
 - servant-client
 - http-client
+- http-client-tls
 - aeson
 - generic-aeson
 

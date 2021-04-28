@@ -7,10 +7,11 @@ module Lib (run) where
 
 import Data.List.NonEmpty (NonEmpty)
 import Data.Aeson (FromJSON)
-import Data.Proxy ( Proxy(..) )
+import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
-import Network.HTTP.Client (newManager, defaultManagerSettings)
-import Servant.API ( JSON, type (:>), Get )
+import Network.HTTP.Client (newManager)
+import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Servant.API (JSON, type (:>), Get)
 import Servant.Client
     ( client,
       hoistClient,
@@ -30,9 +31,9 @@ instance FromJSON CategoryId
 
 data Category = Category
   { categoryId :: CategoryId,
-    active :: Bool,
+    is_active :: Bool,
     selectable :: Bool,
-    language :: String,
+    lang :: String,
     left :: Int,
     right :: Int,
     text :: String
@@ -42,25 +43,29 @@ instance FromJSON Category
 
 type CategoryTree = [Category]
 
-type CategoryAPI = "api" :> "v1" :> "categories" :> "" :> Get '[JSON] CategoryTree
+newtype CategoryObj = CategoryObj { category :: CategoryTree }
+  deriving (Eq, Show, Generic)
+
+instance FromJSON CategoryObj
+
+newtype CategoriesObj = CategoriesObj { categories :: CategoryObj }
+  deriving (Eq, Show, Generic)
+
+instance FromJSON CategoriesObj
+
+type CategoryAPI = "api" :> "v1" :> "categories" :> "" :> Get '[JSON] CategoriesObj
 
 categoryAPI :: Proxy CategoryAPI
 categoryAPI = Proxy
 
 fetchCategoryTree :: ClientM CategoryTree
-fetchCategoryTree = client categoryAPI
-
--- How can be a (Client IO CategoryAPI) used?
-getClients :: ClientEnv -> S.Client IO CategoryAPI
-getClients clientEnv = hoistClient categoryAPI
-  ( fmap (either (error . show) id)
-  . flip runClientM clientEnv
-  ) fetchCategoryTree
+fetchCategoryTree = fmap (category . categories) (client categoryAPI)
 
 run :: IO ()
 run = do
-  manager' <- newManager defaultManagerSettings
-  let clientEnv = mkClientEnv manager' (BaseUrl Https "api.depop.com" 8080 "")
+  manager <- newManager tlsManagerSettings
+  let baseUrl = BaseUrl Https "api.depop.com" 443 ""
+  let clientEnv = mkClientEnv manager baseUrl
   res <- runClientM fetchCategoryTree clientEnv
   case res of
     Left err -> putStrLn $ "Error: " ++ show err
@@ -89,7 +94,7 @@ fetchCategoryId = undefined
 displayBreadcrumb :: String -> IO ()
 displayBreadcrumb _ = undefined
 
--- curl --silent \
+-- curl --verbose \
 --   https://api.depop.com/api/v1/categories/ |\
 --   jq '.categories.category' |\
 --   jq '.[] | { categoryId, text }'
