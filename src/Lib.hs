@@ -3,16 +3,24 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Lib where
+module Lib (run) where
 
 import Data.List.NonEmpty (NonEmpty)
 import Data.Aeson (FromJSON)
-import Data.Proxy
+import Data.Proxy ( Proxy(..) )
 import GHC.Generics (Generic)
 import Network.HTTP.Client (newManager, defaultManagerSettings)
-import Servant.API ((:>), Get, JSON)
-import Servant.Client (ClientM, client, Scheme, BaseUrl, ClientEnv, runClientM, hoistClient)
-import Servant.Types.SourceT (foreach)
+import Servant.API ( JSON, type (:>), Get )
+import Servant.Client
+    ( client,
+      hoistClient,
+      mkClientEnv,
+      runClientM,
+      ClientEnv,
+      ClientM,
+      BaseUrl(BaseUrl),
+      Scheme(Https) )
+import Servant.Types.SourceT ()
 
 import qualified Servant.Client.Streaming as S
 
@@ -42,11 +50,22 @@ categoryAPI = Proxy
 fetchCategoryTree :: ClientM CategoryTree
 fetchCategoryTree = client categoryAPI
 
+-- How can be a (Client IO CategoryAPI) used?
 getClients :: ClientEnv -> S.Client IO CategoryAPI
 getClients clientEnv = hoistClient categoryAPI
   ( fmap (either (error . show) id)
   . flip runClientM clientEnv
-  ) (client categoryAPI)
+  ) fetchCategoryTree
+
+run :: IO ()
+run = do
+  manager' <- newManager defaultManagerSettings
+  let clientEnv = mkClientEnv manager' (BaseUrl Https "api.depop.com" 8080 "")
+  res <- runClientM fetchCategoryTree clientEnv
+  case res of
+    Left err -> putStrLn $ "Error: " ++ show err
+    Right categoryTree -> do
+      print categoryTree
 
 --data Error = CategoryNotFound | TreeDescriptionCorrupted deriving (Eq, Show)
 --breadcrumb :: CategoryTree -> CategoryId -> Either Error (NonEmpty CategoryId)
