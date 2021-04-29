@@ -3,52 +3,78 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Lib (run) where
+module Lib where
 
+import Data.Aeson (FromJSON, parseJSON, withBool, withObject, (.:))
 import Data.List.NonEmpty (NonEmpty)
-import Data.Aeson (FromJSON)
-import Data.Proxy (Proxy(..))
+import Data.Proxy (Proxy (..))
 import GHC.Generics (Generic)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Servant.API (JSON, type (:>), Get)
+import Servant.API (Get, JSON, type (:>))
 import Servant.Client
-    ( client,
-      hoistClient,
-      mkClientEnv,
-      runClientM,
-      ClientEnv,
-      ClientM,
-      BaseUrl(BaseUrl),
-      Scheme(Https) )
+  ( BaseUrl (BaseUrl),
+    ClientM,
+    Scheme (Https),
+    client,
+    mkClientEnv,
+    runClientM,
+  )
 import Servant.Types.SourceT ()
 
-import qualified Servant.Client.Streaming as S
+newtype CategoryId = CategoryId Int
+  deriving (Eq, Show)
+  deriving (FromJSON) via Int
 
-newtype CategoryId = CategoryId Int deriving (Eq, Show, Generic)
+data CategoryState = Active | Inactive deriving (Eq, Show)
 
-instance FromJSON CategoryId
+data CategorySelectableState = Selectable | Unselectable deriving (Eq, Show)
+
+instance FromJSON CategoryState where
+  parseJSON = withBool "category state" $ pure . f
+    where
+      f True = Active
+      f False = Inactive
+
+instance FromJSON CategorySelectableState where
+  parseJSON = withBool "category selectable state" $ pure . f
+    where
+      f True = Selectable
+      f False = Unselectable
+
+newtype CategoryDescription = CategoryDescription String
+  deriving (Eq, Show)
+  deriving (FromJSON) via String
 
 data Category = Category
   { categoryId :: CategoryId,
-    is_active :: Bool,
-    selectable :: Bool,
-    lang :: String,
+    active :: CategoryState,
+    selectable :: CategorySelectableState,
+    language :: String,
     left :: Int,
     right :: Int,
-    text :: String
-  } deriving (Eq, Show, Generic)
+    text :: CategoryDescription
+  }
+  deriving (Eq, Show)
 
-instance FromJSON Category
+instance FromJSON Category where
+  parseJSON = withObject "category" $ \o ->
+    Category <$> o .: "categoryId"
+      <*> o .: "is_active"
+      <*> o .: "selectable"
+      <*> o .: "lang"
+      <*> o .: "left"
+      <*> o .: "right"
+      <*> o .: "text"
 
 type CategoryTree = [Category]
 
-newtype CategoryObj = CategoryObj { category :: CategoryTree }
+newtype CategoryObj = CategoryObj {category :: CategoryTree}
   deriving (Eq, Show, Generic)
 
 instance FromJSON CategoryObj
 
-newtype CategoriesObj = CategoriesObj { categories :: CategoryObj }
+newtype CategoriesObj = CategoriesObj {categories :: CategoryObj}
   deriving (Eq, Show, Generic)
 
 instance FromJSON CategoriesObj
