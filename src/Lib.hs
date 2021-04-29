@@ -20,7 +20,6 @@ import Servant.Client
     mkClientEnv,
     runClientM,
   )
-import Servant.Types.SourceT ()
 
 newtype CategoryId = CategoryId Int
   deriving (Eq, Show)
