@@ -5,13 +5,13 @@
 
 module Lib where
 
-import Data.Aeson (FromJSON, parseJSON, withBool, withObject, (.:))
+import Data.Aeson (FromJSON, parseJSON, withBool, withObject, (.:), ToJSON)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Proxy (Proxy (..))
 import GHC.Generics (Generic)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Servant.API (Get, JSON, type (:>))
+import Servant.API (Capture, Get, JSON, (:<|>), type (:>))
 import Servant.Client
   ( BaseUrl (BaseUrl),
     ClientM,
@@ -68,23 +68,43 @@ instance FromJSON Category where
 
 type CategoryTree = [Category]
 
-newtype CategoryObj = CategoryObj {category :: CategoryTree}
+newtype CategoryResponse = CategoryResponse {category :: CategoryTree}
   deriving (Eq, Show, Generic)
 
-instance FromJSON CategoryObj
+instance FromJSON CategoryResponse
 
-newtype CategoriesObj = CategoriesObj {categories :: CategoryObj}
+newtype CategoriesResponse = CategoriesResponse {categories :: CategoryResponse}
   deriving (Eq, Show, Generic)
 
-instance FromJSON CategoriesObj
+instance FromJSON CategoriesResponse
 
-type CategoryAPI = "api" :> "v1" :> "categories" :> "" :> Get '[JSON] CategoriesObj
+newtype ProductId = ProductId Int
+  deriving (Eq, Show)
+  deriving (FromJSON) via Int
 
-categoryAPI :: Proxy CategoryAPI
-categoryAPI = Proxy
+data ProductDetailsResponse = ProductDetailsResponse
+  { productId :: ProductId,
+    productCategoryIds :: [CategoryId]
+  }
+  deriving (Eq, Show, Generic)
+
+instance FromJSON ProductDetailsResponse where
+  parseJSON = withObject "product details" $ \o ->
+    ProductDetailsResponse <$> o .: "id"
+      <*> o .: "categories"
+
+type API = "api" :> "v1" :> "categories" :> "" :> Get '[JSON] CategoriesResponse
+  :<|> "api" :> "v1" :> "products" :> Capture "pId" ProductId :> "" :> Get '[JSON] ProductDetailsResponse
+
+api :: Proxy API
+api = Proxy
+
+fetchCategoriesResponse :: ClientM CategoriesResponse
+fetchProductDetailsResponse :: ProductId -> ClientM ProductDetailsResponse
+fetchCategoriesResponse :<|> fetchProductDetailsResponse = client api
 
 fetchCategoryTree :: ClientM CategoryTree
-fetchCategoryTree = fmap (category . categories) (client categoryAPI)
+fetchCategoryTree = fmap (category . categories) fetchCategoriesResponse
 
 run :: IO ()
 run = do
