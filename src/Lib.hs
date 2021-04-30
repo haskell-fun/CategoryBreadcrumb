@@ -2,24 +2,18 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Lib where
 
-import Data.Aeson (FromJSON, parseJSON, withBool, withObject, (.:), ToJSON)
+import Data.Aeson (FromJSON, parseJSON, withBool, withObject, (.:))
 import Data.List.NonEmpty (NonEmpty)
 import Data.Proxy (Proxy (..))
 import GHC.Generics (Generic)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Servant.API (Capture, Get, JSON, (:<|>), type (:>))
-import Servant.Client
-  ( BaseUrl (BaseUrl),
-    ClientM,
-    Scheme (Https),
-    client,
-    mkClientEnv,
-    runClientM,
-  )
+import Servant.API (Capture, Get, JSON, ToHttpApiData, type (:>), (:<|>) ((:<|>)))
+import Servant.Client (BaseUrl (BaseUrl), ClientM, Scheme (Https), client, mkClientEnv, runClientM)
 
 newtype CategoryId = CategoryId Int
   deriving (Eq, Show)
@@ -79,14 +73,14 @@ newtype CategoriesResponse = CategoriesResponse {categories :: CategoryResponse}
 instance FromJSON CategoriesResponse
 
 newtype ProductId = ProductId Int
-  deriving (Eq, Show)
+  deriving (Eq, Show, ToHttpApiData)
   deriving (FromJSON) via Int
 
 data ProductDetailsResponse = ProductDetailsResponse
   { productId :: ProductId,
     productCategoryIds :: [CategoryId]
   }
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Show)
 
 instance FromJSON ProductDetailsResponse where
   parseJSON = withObject "product details" $ \o ->
@@ -106,8 +100,8 @@ fetchCategoriesResponse :<|> fetchProductDetailsResponse = client api
 fetchCategoryTree :: ClientM CategoryTree
 fetchCategoryTree = fmap (category . categories) fetchCategoriesResponse
 
-run :: IO ()
-run = do
+runCategoryTree :: IO ()
+runCategoryTree = do
   manager <- newManager tlsManagerSettings
   let baseUrl = BaseUrl Https "api.depop.com" 443 ""
   let clientEnv = mkClientEnv manager baseUrl
@@ -116,6 +110,17 @@ run = do
     Left err -> putStrLn $ "Error: " ++ show err
     Right categoryTree -> do
       print categoryTree
+
+runProductDetails :: IO ()
+runProductDetails = do
+  manager <- newManager tlsManagerSettings
+  let baseUrl = BaseUrl Https "api.depop.com" 443 ""
+  let clientEnv = mkClientEnv manager baseUrl
+  res <- runClientM (fetchProductDetailsResponse $ ProductId 399534) clientEnv
+  case res of
+    Left err -> putStrLn $ "Error: " ++ show err
+    Right productDetails -> do
+      print productDetails
 
 --data Error = CategoryNotFound | TreeDescriptionCorrupted deriving (Eq, Show)
 --breadcrumb :: CategoryTree -> CategoryId -> Either Error (NonEmpty CategoryId)
