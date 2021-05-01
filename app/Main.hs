@@ -1,6 +1,7 @@
 module Main where
 
-import Lib (runProductDetails)
+import Lib (run)
+import ProductDetails (ProductId(ProductId))
 
 main :: IO ()
-main = runProductDetails
+main = run $ ProductId 399534
