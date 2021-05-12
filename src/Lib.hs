@@ -3,14 +3,14 @@
 
 module Lib where
 
-import CategoryTree (CategoryTree, CategoryId, CategoriesResponse(categories), CategoryResponse(category))
+import CategoryTree (CategoryTree, CategoryId(..), CategoriesResponse(categories), CategoryResponse(category))
 import Data.List.NonEmpty (NonEmpty)
-import Data.Proxy (Proxy (..))
+import Data.Proxy (Proxy(..))
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import ProductDetails (ProductDetailsResponse, ProductId(..))
 import Servant.API (Capture, Get, JSON, type (:>), (:<|>) ((:<|>)))
-import Servant.Client (BaseUrl (BaseUrl), ClientM, Scheme (Https), client, mkClientEnv, runClientM)
+import Servant.Client (BaseUrl(BaseUrl), ClientM, Scheme(Https), client, mkClientEnv, runClientM)
 
 type API = "api" :> "v1" :> "categories" :> "" :> Get '[JSON] CategoriesResponse
   :<|> "api" :> "v1" :> "products" :> Capture "pId" ProductId :> "" :> Get '[JSON] ProductDetailsResponse
@@ -41,23 +41,23 @@ run pId = do
       print pd
 
 --data Error = CategoryNotFound | TreeDescriptionCorrupted deriving (Eq, Show)
---breadcrumb :: CategoryTree -> CategoryId -> Either Error (NonEmpty CategoryId)
-breadcrumb :: CategoryTree -> CategoryId -> Maybe (NonEmpty CategoryId)
-breadcrumb _ _ = Nothing
+--findBreadcrumb :: CategoryTree -> CategoryId -> Either Error (NonEmpty CategoryId)
+findBreadcrumb :: CategoryTree -> CategoryId -> Maybe (NonEmpty CategoryId)
+findBreadcrumb _ _ = Nothing
 
 render :: Maybe (NonEmpty CategoryId) -> String
 render _ = undefined
 
 -- cli :: IO ()
 -- cli = do
+--   t <- fetchCategoryTree...
 --   cid <- fetchCategoryId
---   t <- fetchCategoryTree
---   let b = breadcrumb t cid
+--   let b = findBreadcrumb t cid
 --   let s = render b
 --   displayBreadcrumb s
 
 fetchCategoryId :: IO CategoryId
-fetchCategoryId = undefined
+fetchCategoryId = pure $ CategoryId 51
 
 displayBreadcrumb :: String -> IO ()
-displayBreadcrumb _ = undefined
+displayBreadcrumb = putStr

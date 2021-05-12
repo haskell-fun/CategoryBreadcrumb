@@ -5,7 +5,7 @@ module ProductDetails where
 import CategoryTree (CategoryId)
 import Data.Aeson (FromJSON, parseJSON, withObject, (.:))
 import Data.Text (pack)
-import Servant.API (ToHttpApiData (toUrlPiece, toQueryParam))
+import Servant.API (ToHttpApiData(toUrlPiece, toQueryParam))
 
 newtype ProductId = ProductId Int
   deriving (Eq, Show)
