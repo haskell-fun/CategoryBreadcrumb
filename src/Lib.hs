@@ -43,15 +43,18 @@ run pId = do
 
 cli :: IO ()
 cli = do
-  cid <- fetchCategoryId
-  csRes <- fetchCategoriesResponseIO
-  let t = fmap toCategoryTree csRes
-  let b = fmap (findBreadcrumb cid) t
-  let output = either renderError renderBreadcrumb b
-  putStrLn output
+  c <- fetchCategoryId
+  case c of
+    Left cErr -> putStrLn $ renderError cErr
+    Right cid -> do
+      csRes <- fetchCategoriesResponseIO
+      let t = fmap toCategoryTree csRes
+      let b = fmap (findBreadcrumb cid) t
+      let output = either renderError renderBreadcrumb b
+      putStrLn output
 
-fetchCategoryId :: IO CategoryId
-fetchCategoryId = pure $ CategoryId 51
+fetchCategoryId :: IO (Either String CategoryId)
+fetchCategoryId = pure $ Right $ CategoryId 51
 
 fetchCategoriesResponseIO :: IO (Either ClientError CategoriesResponse)
 fetchCategoriesResponseIO = do
