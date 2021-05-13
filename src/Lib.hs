@@ -4,13 +4,14 @@
 module Lib where
 
 import CategoryTree (CategoryTree, CategoryId(..), CategoriesResponse(categories), CategoryResponse(category))
-import Data.List.NonEmpty (NonEmpty)
+import Data.List (intercalate)
+import Data.List.NonEmpty (NonEmpty, toList)
 import Data.Proxy (Proxy(..))
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import ProductDetails (ProductDetailsResponse, ProductId(..))
 import Servant.API (Capture, Get, JSON, type (:>), (:<|>) ((:<|>)))
-import Servant.Client (BaseUrl(BaseUrl), ClientM, Scheme(Https), client, mkClientEnv, runClientM)
+import Servant.Client (BaseUrl(BaseUrl), ClientError, ClientM, Scheme(Https), client, mkClientEnv, runClientM)
 
 type API = "api" :> "v1" :> "categories" :> "" :> Get '[JSON] CategoriesResponse
   :<|> "api" :> "v1" :> "products" :> Capture "pId" ProductId :> "" :> Get '[JSON] ProductDetailsResponse
@@ -40,24 +41,42 @@ run pId = do
       print ct
       print pd
 
---data Error = CategoryNotFound | TreeDescriptionCorrupted deriving (Eq, Show)
---findBreadcrumb :: CategoryTree -> CategoryId -> Either Error (NonEmpty CategoryId)
-findBreadcrumb :: CategoryTree -> CategoryId -> Maybe (NonEmpty CategoryId)
+cli :: IO ()
+cli = do
+  c <- fetchCategoryId
+  case c of
+    Left cErr -> putStrLn $ renderError cErr
+    Right cid -> do
+      csRes <- fetchCategoriesResponseIO
+      let t = fmap toCategoryTree csRes
+      let b = fmap (findBreadcrumb cid) t
+      let output = either renderError renderBreadcrumb b
+      putStrLn output
+
+fetchCategoryId :: IO (Either String CategoryId)
+fetchCategoryId = pure $ Right $ CategoryId 51
+
+fetchCategoriesResponseIO :: IO (Either ClientError CategoriesResponse)
+fetchCategoriesResponseIO = do
+  manager <- newManager tlsManagerSettings
+  let baseUrl = BaseUrl Https "api.depop.com" 443 ""
+  let clientEnv = mkClientEnv manager baseUrl
+  runClientM fetchCategoriesResponse clientEnv
+
+type Breadcrumb = Maybe (NonEmpty CategoryId)
+
+toCategoryTree :: CategoriesResponse -> CategoryTree
+toCategoryTree = category . categories
+
+findBreadcrumb :: CategoryId -> CategoryTree -> Breadcrumb
 findBreadcrumb _ _ = Nothing
 
-render :: Maybe (NonEmpty CategoryId) -> String
-render _ = undefined
+renderBreadcrumb :: Breadcrumb -> String
+renderBreadcrumb Nothing = "N.D."
+renderBreadcrumb (Just nonEmptyIds) = joinNonEmptyList " > " nonEmptyIds
 
--- cli :: IO ()
--- cli = do
---   t <- fetchCategoryTree...
---   cid <- fetchCategoryId
---   let b = findBreadcrumb t cid
---   let s = render b
---   displayBreadcrumb s
+renderError :: Show a => a -> String
+renderError = ("Error: " ++) . show
 
-fetchCategoryId :: IO CategoryId
-fetchCategoryId = pure $ CategoryId 51
-
-displayBreadcrumb :: String -> IO ()
-displayBreadcrumb = putStr
+joinNonEmptyList :: Show a => String -> NonEmpty a -> String
+joinNonEmptyList separator = intercalate separator . toList . fmap show
