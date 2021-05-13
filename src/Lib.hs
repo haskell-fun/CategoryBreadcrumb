@@ -73,7 +73,7 @@ renderBreadcrumb Nothing = "N.D."
 renderBreadcrumb (Just nonEmptyIds) = joinNonEmptyList " > " nonEmptyIds
 
 renderError :: Show a => a -> String
-renderError e = "Error: " ++ show e
+renderError = ("Error: " ++) . show
 
 joinNonEmptyList :: Show a => String -> NonEmpty a -> String
 joinNonEmptyList separator = intercalate separator . toList . fmap show
