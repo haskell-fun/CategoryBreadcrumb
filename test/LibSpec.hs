@@ -42,16 +42,16 @@ spec = describe "findBreadcrumb" $ do
   prop "returns Nothing iff categoryId is not present in the tree (manual monadic generators)" $
     forAll genCategoryId $ \c ->
       forAll (listOf sillyGenCategory) $ \t ->
-        let isCategoryPresent t cid = cid `elem` fmap categoryId t
-         in isNothing (findBreadcrumb t c) == not (isCategoryPresent t c)
+        let isCategoryPresent c t = c `elem` fmap categoryId t
+         in isNothing (findBreadcrumb c t) == not (isCategoryPresent c t)
 
   prop "returns Nothing iff categoryId is not present in the tree (automatic type class resolution)" $
     \c t ->
-      let isCategoryPresent t c = c `elem` fmap categoryId t
-       in isNothing (findBreadcrumb t c) == not (isCategoryPresent t c)
+      let isCategoryPresent c t = c `elem` fmap categoryId t
+       in isNothing (findBreadcrumb c t) == not (isCategoryPresent c t)
 
 -- prop "must return Nothing if categoryId is not present in the tree" $
---   \t c -> not (isCategoryPresent t c) ==> isNothing (findBreadcrumb t c)
+--   \c t -> not (isCategoryPresent c t) ==> isNothing (findBreadcrumb c t)
 
 -- prop "must return Nothing ONLY if categoryId is not present in the tree" $
---   \t c -> isNothing (findBreadcrumb t c) ==> not (isCategoryPresent t c)
+--   \c t -> isNothing (findBreadcrumb c t) ==> not (isCategoryPresent c t)
