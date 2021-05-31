@@ -5,6 +5,12 @@ dependencies:
 - base >= 4.7 && < 5
 - text
 - containers
+- servant
+- servant-client
+- http-client
+- http-client-tls
+- aeson
+- generic-aeson
 
 default-extensions:
 - OverloadedStrings
@@ -42,7 +48,6 @@ tests:
     - hspec
     - hspec-discover
     - QuickCheck
-
 
 verbatim:
   cabal-version: 3.0
